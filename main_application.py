@@ -147,8 +147,23 @@
 # ------------------------------
 
 # ------------------------------
+# Imports
+# ------------------------------
+
+from customer import Customer
+from rental import Rental
+from rental_equipment import RentalEquipment
+from rental_shop import RentalShop
+from ski import Ski
+from snowboard import Snowboard
+
+
+
+# ------------------------------
 # Function Area
 # ------------------------------
+
+# UTILITY FUNCTIONS
 
 # ------------------------------
 # Function Name: Validate Integer
@@ -255,8 +270,34 @@ def Get_Valid_String(strMessage):
     print()
     return strInput
 
+# APPLICATION FUNCTIONS
+
+# ------------------------------
+# Function Name: Prompt Inventory
+# Function Purpose: Prompt user to set the starting inventory numbers, returns the instantiated RentalShop
+# ------------------------------
+
+def Prompt_Inventory():
+    intSkis = Get_Valid_Integer("Enter ski inventory amount: ")
+    intSnowboards = Get_Valid_Integer("Enter snowboard inventory amount: ")
+    return RentalShop(intSkis, intSnowboards)
+
 
 
 # ------------------------------
 # Main Area
 # ------------------------------
+
+blnValidated = bool(False)
+
+def main():
+    # ----- DAY START
+    # Create objects
+    Skis = Ski()
+    Snowbards = Snowboard()
+
+    # Prompt start of day inventory
+    print("---START OF DAY---")
+    SnowShop = Prompt_Inventory()
+
+main()
