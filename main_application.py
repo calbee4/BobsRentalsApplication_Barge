@@ -137,4 +137,126 @@
 # # -----------------------------------------------------------------------
 # main()
 
-# ------------------------------------- PROVIDED TEST MATERIAL ------------------------------------------
+# ------------------------------------- PROVIDED TEST MATERIAL -----------------------------------------
+
+
+
+# ------------------------------
+# Name: Jordyn Barge
+# Assignment Name: Final Project Part 2
+# ------------------------------
+
+# ------------------------------
+# Function Area
+# ------------------------------
+
+# ------------------------------
+# Function Name: Validate Integer
+# Function Purpose: Validate an integer for range min > 0 and existence as an integer. A range max can be defined, which will be ignored if left empty or < 0
+# ------------------------------
+def Validate_Integer(intInput, intRangeMax = 0):
+    try:
+        intInput = int(intInput)
+        if intInput > intRangeMax and intRangeMax > 0:
+            print("Input must be less than", intRangeMax + 1)
+        elif intInput > 0:
+            global blnValidated
+            blnValidated = True
+        else:
+            print("Input must be greater than 0")
+    except ValueError:
+        intInput = int(0)
+        print("Input must be a whole number greater than 0")
+    return intInput
+
+
+
+# ------------------------------
+# Function Name: Validate String Y/N
+# Function Purpose: Validate a string to be a Y/N answer
+# ------------------------------
+def Validate_String_Y_N(strInput):
+    try:
+        strInput = str(strInput)
+        if strInput == "Y" or strInput == "N":
+            global blnValidated
+            blnValidated = True
+        else:
+            print("Input must be Y/N (case sensitive)")
+    except ValueError:
+        strInput = str()
+        print("Input must be either letter: Y or N (case sensitive)")
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Validate String
+# Function Purpose: Validate a string
+# ------------------------------
+def Validate_String(strInput):
+    try:
+        strInput = str(strInput)
+        if strInput == "":
+            print("Input must not be empty")
+        else:
+            global blnValidated
+            blnValidated = True
+    except ValueError:
+        strInput = str()
+        print("Input must be a string")
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Get Valid Integer
+# Function Purpose: Yields the program until the user enters a valid integer. A range max can be defined, which will be ignored if left empty or < 0
+# ------------------------------
+def Get_Valid_Integer(strMessage, intRangeMax = 0):
+    intInput = int(0)
+    global blnValidated
+    while blnValidated is False:
+        intInput = input(strMessage)
+        intInput = Validate_Integer(intInput, intRangeMax)
+    blnValidated = False
+    print()
+    return intInput
+
+
+
+# ------------------------------
+# Function Name: Get Valid String Y/N
+# Function Purpose: Yields the program until the user enters a valid string, either Y or N.
+# ------------------------------
+def Get_Valid_String_Y_N(strMessage):
+    strInput = str()
+    global blnValidated
+    while blnValidated is False:
+        strInput = input(strMessage)
+        strInput = Validate_String_Y_N(strInput)
+    blnValidated = False
+    print()
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Get Valid String
+# Function Purpose: Yields the program until the user enters a valid string.
+# ------------------------------
+def Get_Valid_String(strMessage):
+    strInput = str()
+    global blnValidated
+    while blnValidated is False:
+        strInput = input(strMessage)
+        strInput = Validate_String(strInput)
+    blnValidated = False
+    print()
+    return strInput
+
+
+
+# ------------------------------
+# Main Area
+# ------------------------------
