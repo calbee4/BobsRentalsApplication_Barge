@@ -739,7 +739,7 @@ def End_Of_Day():
     global SnowShop
 
     print("\n---END OF DAY---")
-    print("Skis Rented Today: {} \nSnowboards Rented Today: {} \nDaily Revenue: {}".format(SnowShop.daily_skis_rented, SnowShop.daily_snowboards_rented, SnowShop.daily_revenue))
+    print("Skis Rented Today: {} \nSnowboards Rented Today: {} \nDaily Revenue: ${:.2f}".format(SnowShop.daily_skis_rented, SnowShop.daily_snowboards_rented, SnowShop.daily_revenue))
     print("Good work today! :)")
 
 
