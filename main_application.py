@@ -472,15 +472,21 @@ def Get_Customer_Rentals(objCustomer):
         return objRental
 
 
+
+# ------------------------------
+# Function Name: Display Quote
+# Function Purpose: Displays a quote with the given rental items, basis, and length
+# ------------------------------
+
 def Display_Quote(intSkis, intSnowboards, strRentalBasis, intRentalLength, objRental):
     fltSubtotal = objRental.calculate_subtotal(intRentalLength)
     fltTotal = objRental.calculate_subtotal(intRentalLength)
 
     if objRental.ski_quantity > 0:
-        print("{} Skis on a {} basis: ${:.2f}".format(intSkis, strRentalBasis, Skis.calculate_best_price(strRentalBasis, intRentalLength) * intSkis))
+        print("{} Skis on a x{} {} basis: ${:.2f}".format(intSkis, intRentalLength, strRentalBasis, Skis.calculate_best_price(strRentalBasis, intRentalLength) * intSkis))
                     
     if objRental.snowboard_quantity > 0:
-        print("{} Snowboards on a {} basis: ${:.2f}".format(intSnowboards, strRentalBasis, Snowboards.calculate_best_price(strRentalBasis, intRentalLength) * intSnowboards))
+        print("{} Snowboards on a x{} {} basis: ${:.2f}".format(intSnowboards, intRentalLength, strRentalBasis, Snowboards.calculate_best_price(strRentalBasis, intRentalLength) * intSnowboards))
                     
     print("Subtotal: ${:.2f}".format(fltSubtotal))
 
