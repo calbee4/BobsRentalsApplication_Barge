@@ -736,7 +736,11 @@ def Show_Inventory():
 # ------------------------------
 
 def End_Of_Day():
-    pass
+    global SnowShop
+
+    print("\n---END OF DAY---")
+    print("Skis Rented Today: {} \nSnowboards Rented Today: {} \nDaily Revenue: {}".format(SnowShop.daily_skis_rented, SnowShop.daily_snowboards_rented, SnowShop.daily_revenue))
+    print("Good work today! :)")
 
 
 # ------------------------------
