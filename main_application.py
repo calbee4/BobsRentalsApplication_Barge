@@ -150,9 +150,7 @@
 # Imports
 # ------------------------------
 
-from ast import Return
 from customer import Customer
-import customer
 from rental import Rental
 from rental_equipment import RentalEquipment
 from rental_shop import RentalShop
@@ -277,7 +275,7 @@ def Get_Valid_Integer(strMessage, intRangeMax = None, intRangeMin = None):
 # Function Name: Get Valid Integer Optional
 # Function Purpose: Yields the program until the user enters a valid integer. A range max can be defined, which will be ignored if left empty or < 0. User can leave blank.
 # ------------------------------
-def Get_Valid_Integer_Optional(strMessage, intRangeMax = 0):
+def Get_Valid_Integer_Optional(strMessage, intRangeMax = None, intRangeMin = None):
     intInput = int(0)
     global blnValidated
     while blnValidated is False:
@@ -286,7 +284,7 @@ def Get_Valid_Integer_Optional(strMessage, intRangeMax = 0):
         if intInput == "":
             blnValidated = True
         else:
-            intInput = Validate_Integer(intInput, intRangeMax)
+            intInput = Validate_Integer(intInput, intRangeMax, intRangeMin)
     blnValidated = False
     print()
     return intInput
@@ -396,7 +394,7 @@ def Get_Customer():
 
     while blnValidated == False:
         strName = Get_Valid_String("Enter your name: ")
-        intID = Get_Valid_Integer_Optional("Enter your customer ID (optional, leave blank to skip): ")
+        intID = Get_Valid_Integer_Optional("Enter your customer ID (optional, leave blank to skip): ", intRangeMin = 0)
 
         objCustomer = Search_Customer(strName, intID)
 
@@ -407,7 +405,13 @@ def Get_Customer():
                 blnValidated = True
 
         elif type(objCustomer) == Customer:
-            print("Customer found:", objCustomer.customer_name, objCustomer.customer_id)
+            print("Customer found: {} (ID: {})".format(objCustomer.customer_name, objCustomer.customer_id))
+            strOption = Get_Valid_String_Y_N("Is this the correct customer? (Enter Y/N): ")
+
+            if strOption == "Y":
+                blnValidated = True
+            else:
+                print("Canceling, please try again.")
         elif type(objCustomer) == list:
             print("Multiple customers with name found. Select your profile.")
 
@@ -415,15 +419,41 @@ def Get_Customer():
             intItemNumber = 1
 
             for objPotentialCustomer in objCustomer:
-                strList = strList & intItemNumber & ".: " & objPotentialCustomer.customer_name & " " & objPotentialCustomer.customer_id & "\n"
+                strList = strList + "{}. {} (ID: {})\n".format(intItemNumber, objPotentialCustomer.customer_name, objPotentialCustomer.customer_id)
                 intItemNumber += 1
 
-            intItemNumber = Get_Valid_Integer(strList & "(Enter 1-" & len(objCustomer) & "): ", intRangeMin = 1, intRangeMax = len(objCustomer))
+            intItemNumber = Get_Valid_Integer(strList + "(Enter 1-{}): ".format(len(objCustomer)), intRangeMin = 1, intRangeMax = len(objCustomer))
             objCustomer = objCustomer[intItemNumber - 1]
 
-            print("Customer selected:", objCustomer.customer_name, objCustomer.customer_id)
+            print("Customer selected: {} (ID: {})".format(objCustomer.customer_name, objCustomer.customer_id))
+
+            blnValidated = True
 
     return objCustomer
+
+
+
+# ------------------------------
+# Function Name: Get Customer Rentals
+# Function Purpose: Returns a list of all rentals made by a customer
+# ------------------------------
+
+def Get_Customer_Rentals(objCustomer):
+    if type(objCustomer) != Customer:
+        print("Customer was not properly provided! Please try again.")
+        return
+
+    global Rentals
+
+    lstRentals = []
+
+    for objRental in Rentals:
+        if objRental.customer == objCustomer:
+            lstRentals.append(objRental)
+
+    return lstRentals
+
+
 
 # APPLICATION FUNCTIONS
 
@@ -433,14 +463,11 @@ def Get_Customer():
 # ------------------------------
 
 def Start_Of_Day():
-    global SnowShop
-
     print("---START OF DAY---")
     intSkis = Get_Valid_Integer("Enter ski inventory amount: ", intRangeMin = 0)
     intSnowboards = Get_Valid_Integer("Enter snowboard inventory amount: ", intRangeMin = 0)
     
-    SnowShop.starting_ski_inventory = intSkis
-    SnowShop.starting_snowboard_inventory = intSnowboards
+    return RentalShop(intSkis, intSnowboards)
 
 
 
@@ -458,7 +485,9 @@ def Main_Menu():
     elif intChoice == 2:
         Return_Rental_Menu()
     elif intChoice == 3:
-        Show_Inventory() 
+        Show_Inventory()
+        print()
+        Main_Menu()
     else: 
         End_Of_Day()
 
@@ -493,7 +522,8 @@ def New_Customer_Menu():
     print("---NEW CUSTOMER MENU---")
     strName = Get_Valid_String("Enter your name: ")
     intID = len(Customers) + 1
-    print(strName & ", your CustomerID is", intID)
+    print(strName + ", your CustomerID is", intID)
+    print()
 
     objCustomer = Customer(intID, strName)
     Customers.append(objCustomer)
@@ -509,6 +539,9 @@ def New_Customer_Menu():
 
 def Start_Rental_Menu(objCustomer = None):
     global SnowShop
+    global Rentals
+    global Skis
+    global Snowboards
 
     print("---START RENTAL---")
     blnCancel = False
@@ -516,6 +549,7 @@ def Start_Rental_Menu(objCustomer = None):
     intSkis = 0
     intSnowboards = 0
     strRentalBasis = ""
+    intRentalLength = 0
     strCoupon = ""
 
     if type(objCustomer) != Customer:
@@ -528,12 +562,21 @@ def Start_Rental_Menu(objCustomer = None):
         if objCustomer == None:
             blnCancel = True
 
+    if SnowShop.available_ski_inventory + SnowShop.available_snowboard_inventory == 0:
+        print("There is currently no equipment to rent! Come back later!\n")
+        blnCancel = True
+
     if not blnCancel:
-        intSkis = Get_Valid_Integer("How many Skis would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_ski_inventory)
-        intSnowboards = Get_Valid_Integer("How many Snowboards would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_snowboard_inventory)
+        Show_Inventory()
+
+        if SnowShop.available_ski_inventory > 0:
+            intSkis = Get_Valid_Integer("How many Skis would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_ski_inventory)
+        
+        if SnowShop.available_snowboard_inventory > 0: 
+            intSnowboards = Get_Valid_Integer("How many Snowboards would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_snowboard_inventory)
 
         if intSkis == 0 and intSnowboards == 0:
-            print("No inventory is being rented -- rental canceled.")
+            print("No inventory is being rented -- rental canceled.\n")
             blnCancel = True
 
         if not blnCancel:
@@ -546,16 +589,53 @@ def Start_Rental_Menu(objCustomer = None):
             else:
                 strRentalBasis = "Weekly"
 
+            intRentalLength = Get_Valid_Integer("What's the estimated length of the rental? (Enter a whole number): ", intRangeMin = 1)
+
             strCoupon = Get_Valid_String_Optional("Enter a discount code (optional, leave blank if none): ")
 
-            print("CONFIRM RENTAL:\nCustomer:", objCustomer.customer_name, "ID:", objCustomer.customer_id, "\nSkis:", intSkis, "\nSnowboards:", intSnowboards, "\nRental Basis:", strRentalBasis, "\nCoupon Code:", strCoupon)
-            strConfirm = Get_Valid_String_Y_N("Is this correct? (Enter Y\N): ")
+            objRental = Rental(objCustomer, intSkis, intSnowboards, strRentalBasis, strCoupon)
+
+            print("CONFIRM RENTAL: \nCustomer: {} (ID: {}) \nSkis: {} \nSnowboards: {} \nRental Basis: {} \nRental Length: {} \nCoupon Code: {}".format(objCustomer.customer_name, objCustomer.customer_id, intSkis, intSnowboards, strRentalBasis, intRentalLength, strCoupon))
+            strConfirm = Get_Valid_String_Y_N("Is this correct? (Enter Y/N): ")
 
             if strConfirm == "Y":
-                pass # Create rental and add to list
+                fltSubtotal = objRental.calculate_subtotal(intRentalLength)
+                fltTotal = objRental.calculate_subtotal(intRentalLength)
 
+                print("COST ESTIMATE:")
+                
+                if intSkis > 0:
+                    print("{} Skis on a {} basis: ${:.2f}".format(intSkis, strRentalBasis, Skis.calculate_best_price(strRentalBasis, intRentalLength) * intSkis))
+                    
+                if intSnowboards > 0:
+                    print("{} Snowboards on a {} basis: ${:.2f}".format(intSnowboards, strRentalBasis, Snowboards.calculate_best_price(strRentalBasis, intRentalLength) * intSnowboards))
+                    
+                print("Subtotal: ${:.2f}".format(fltSubtotal))
 
+                fltTotal = objRental.apply_family_discount(fltTotal)
 
+                if fltTotal < fltSubtotal:
+                    print("Family discount: -${:.2f}".format(fltSubtotal - fltTotal))
+                    fltSubtotal = fltTotal
+                
+                fltTotal = objRental.apply_coupon_discount(fltTotal)
+                    
+                if fltTotal < fltSubtotal:
+                    print("Coupon code: -${:.2f}".format(fltSubtotal - fltTotal))
+                    
+                print("Final estimated total: ${:.2f}".format(fltTotal))
+                
+                strConfirm = Get_Valid_String_Y_N("Confirm rental (Enter Y/N): ")
+
+            if strConfirm == "Y":
+                print("Rental Started.\n")
+                Rentals.append(objRental)
+
+                SnowShop.rent_equipment(intSkis, intSnowboards)
+            else:
+                print("Rental canceled. Returning to main menu.\n")
+
+    Main_Menu()
 
 
 
@@ -565,7 +645,20 @@ def Start_Rental_Menu(objCustomer = None):
 # ------------------------------
 
 def Return_Rental_Menu():
-    pass
+    global SnowShop
+    global Rentals
+
+    print("---RENTAL RETURN---")
+    blnCancel = False
+
+    print("Select your user profile.")
+    objCustomer = Get_Customer()
+        
+    if objCustomer == None:
+        blnCancel = True
+
+    if not blnCancel:
+        pass
 
 
 
@@ -575,7 +668,9 @@ def Return_Rental_Menu():
 # ------------------------------
 
 def Show_Inventory():
-    pass 
+    global SnowShop
+
+    print("Current inventory levels: \nSkis: {} \nSnowboards: {}".format(SnowShop.available_ski_inventory, SnowShop.available_snowboard_inventory))
 
 
 
@@ -594,16 +689,17 @@ def End_Of_Day():
 
 blnValidated = bool(False)
 Customers = []
-SnowShop = RentalShop(0, 0)
+Rentals = []
+SnowShop = None
+Skis = Ski()
+Snowboards = Snowboard()
 
 def main():
+    global SnowShop
+
     # ----- DAY START
     # Create objects
-    Skis = Ski()
-    Snowbards = Snowboard()
-
-    # Prompt start of day inventory
-    Start_Of_Day()
+    SnowShop = Start_Of_Day()
 
     # ----- MAIN MENU
     Main_Menu()
