@@ -342,7 +342,7 @@ def Get_Customer():
         elif type(objCustomer) == Customer:
             print("Customer found:", objCustomer.customer_name, objCustomer.customer_id)
         elif type(objCustomer) == list:
-            print("Multiple customers with name found.")
+            print("Multiple customers with name found. Select your profile.")
 
             strList = ""
             intItemNumber = 1
@@ -350,6 +350,13 @@ def Get_Customer():
             for objPotentialCustomer in objCustomer:
                 strList = strList & intItemNumber & ".: " & objPotentialCustomer.customer_name & " " & objPotentialCustomer.customer_id & "\n"
                 intItemNumber += 1
+
+            intItemNumber = Get_Valid_Integer(strList & "(Enter 1-" & len(objCustomer) & "): ", len(objCustomer))
+            objCustomer = objCustomer[intItemNumber - 1]
+
+            print("Customer selected:", objCustomer.customer_name, objCustomer.customer_id)
+
+    return objCustomer
             
 
 
