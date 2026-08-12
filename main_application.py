@@ -412,9 +412,9 @@ def Get_Customer():
             if strOption == "Y":
                 blnValidated = True
             else:
-                print("Canceling, please try again.")
+                print("Canceling, please try again.\n")
         elif type(objCustomer) == list:
-            print("Multiple customers with name found. Select your profile.")
+            print("Customers found via name. Select your profile.")
 
             strList = ""
             intItemNumber = 1
@@ -427,8 +427,12 @@ def Get_Customer():
             objCustomer = objCustomer[intItemNumber - 1]
 
             print("Customer selected: {} (ID: {})".format(objCustomer.customer_name, objCustomer.customer_id))
+            strOption = Get_Valid_String_Y_N("Is this the correct customer? (Enter Y/N): ")
 
-            blnValidated = True
+            if strOption == "Y":
+                blnValidated = True
+            else:
+                print("Canceling, please try again.\n")
 
     return objCustomer
 
@@ -448,7 +452,7 @@ def Get_Customer_Rentals(objCustomer):
 
     lstRentals = []
 
-    for objRental, i in Rentals:
+    for objRental in Rentals:
         if objRental.customer == objCustomer:
             lstRentals.append(objRental)
 
@@ -697,18 +701,18 @@ def Return_Rental_Menu():
             strChoice = Get_Valid_String_Y_N("Is this correct? (Enter Y/N): ")
 
             if strChoice == "N":
-                print("Canceling rental return. Returning to main menu.")
+                print("Canceling rental return. Returning to main menu.\n")
                 blnCancel = True
 
             if not blnCancel:
                 print("CHECKOUT:")
 
-                Display_Quote(objRental.snowboard_quantity, objRental.snowboard_quantity, objRental.rental_period, intRentalTime, objRental)
+                Display_Quote(objRental.ski_quantity, objRental.snowboard_quantity, objRental.rental_period, intRentalTime, objRental)
                 
-                strConfirm = Get_Valid_String_Y_N("Confirm total due amount (Enter Y/N): ")
+                strChoice = Get_Valid_String_Y_N("Confirm total due amount (Enter Y/N): ")
 
                 if strChoice == "N":
-                    print("Canceling checkout. Returning to main menu.")
+                    print("Canceling checkout. Returning to main menu.\n")
                     blnCancel = True
 
                 if not blnCancel:
