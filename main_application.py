@@ -169,21 +169,33 @@ from snowboard import Snowboard
 
 # ------------------------------
 # Function Name: Validate Integer
-# Function Purpose: Validate an integer for range min > 0 and existence as an integer. A range max can be defined, which will be ignored if left empty or < 0
+# Function Purpose: Validate an integer, within an optional inclusive range.
 # ------------------------------
-def Validate_Integer(intInput, intRangeMax = 0):
+def Validate_Integer(intInput, intRangeMax = None, intRangeMin = None):
+    if intRangeMin != None and intRangeMax != None:
+        if intRangeMax < intRangeMin:
+            intRangeMax = intRangeMin
+
     try:
         intInput = int(intInput)
-        if intInput > intRangeMax and intRangeMax > 0:
-            print("Input must be less than", intRangeMax + 1)
-        elif intInput > 0:
+        if intRangeMax != None and intInput > intRangeMax:
+            print("Maximum input must be less than", intRangeMax + 1)
+        elif intRangeMin != None and intInput < intRangeMin:
+            print("Minimum input must be", intRangeMin, "or greater")
+        else:
             global blnValidated
             blnValidated = True
-        else:
-            print("Input must be greater than 0")
     except ValueError:
         intInput = int(0)
-        print("Input must be a whole number greater than 0")
+        strOutput = "Input must be a whole number"
+
+        if intRangeMin != None:
+            strOutput += ", minimum " + str(intRangeMin)
+
+        if intRangeMax != None:
+            strOutput += ", maximum " + str(intRangeMax)
+
+        print(strOutput)
     return intInput
 
 
@@ -203,6 +215,25 @@ def Validate_String_Y_N(strInput):
     except ValueError:
         strInput = str()
         print("Input must be either letter: Y or N (case sensitive)")
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Validate String Rental Basis
+# Function Purpose: Validate a string to be "Hourly", "Daily", or "Weekly"
+# ------------------------------
+def Validate_String_Rental_Basis(strInput):
+    try:
+        strInput = str(strInput)
+        if strInput == "Hourly" or strInput == "Daily" or strInput == "Weekly":
+            global blnValidated
+            blnValidated = True
+        else:
+            print("Input must be Hourly, Daily, or Weekly (case sensitive)")
+    except ValueError:
+        strInput = str()
+        print("Input must be Hourly, Daily, or Weekly (case sensitive)")
     return strInput
 
 
@@ -228,14 +259,14 @@ def Validate_String(strInput):
 
 # ------------------------------
 # Function Name: Get Valid Integer
-# Function Purpose: Yields the program until the user enters a valid integer. A range max can be defined, which will be ignored if left empty or < 0
+# Function Purpose: Yields the program until the user enters a valid integer. An optional inclusive range can be set.
 # ------------------------------
-def Get_Valid_Integer(strMessage, intRangeMax = 0):
+def Get_Valid_Integer(strMessage, intRangeMax = None, intRangeMin = None):
     intInput = int(0)
     global blnValidated
     while blnValidated is False:
         intInput = input(strMessage)
-        intInput = Validate_Integer(intInput, intRangeMax)
+        intInput = Validate_Integer(intInput, intRangeMax, intRangeMin)
     blnValidated = False
     print()
     return intInput
@@ -288,6 +319,42 @@ def Get_Valid_String(strMessage):
     while blnValidated is False:
         strInput = input(strMessage)
         strInput = Validate_String(strInput)
+    blnValidated = False
+    print()
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Get Valid Rental Basis
+# Function Purpose: Yields the program until the user enters a valid rental basis (string).
+# ------------------------------
+def Get_Valid_Rental_Basis(strMessage):
+    strInput = str()
+    global blnValidated
+    while blnValidated is False:
+        strInput = input(strMessage)
+        strInput = Validate_String_Rental_Basis(strInput)
+    blnValidated = False
+    print()
+    return strInput
+
+
+
+# ------------------------------
+# Function Name: Get Valid String Optional
+# Function Purpose: Yields the program until the user enters a valid string. User can leave blank.
+# ------------------------------
+def Get_Valid_String_Optional(strMessage):
+    strInput = str()
+    global blnValidated
+    while blnValidated is False:
+        strInput = input(strMessage)
+
+        if strInput == "":
+            blnValidated = True
+        else:
+            strInput = Validate_String(strInput)
     blnValidated = False
     print()
     return strInput
@@ -351,15 +418,12 @@ def Get_Customer():
                 strList = strList & intItemNumber & ".: " & objPotentialCustomer.customer_name & " " & objPotentialCustomer.customer_id & "\n"
                 intItemNumber += 1
 
-            intItemNumber = Get_Valid_Integer(strList & "(Enter 1-" & len(objCustomer) & "): ", len(objCustomer))
+            intItemNumber = Get_Valid_Integer(strList & "(Enter 1-" & len(objCustomer) & "): ", intRangeMin = 1, intRangeMax = len(objCustomer))
             objCustomer = objCustomer[intItemNumber - 1]
 
             print("Customer selected:", objCustomer.customer_name, objCustomer.customer_id)
 
     return objCustomer
-            
-
-
 
 # APPLICATION FUNCTIONS
 
@@ -369,10 +433,14 @@ def Get_Customer():
 # ------------------------------
 
 def Start_Of_Day():
+    global SnowShop
+
     print("---START OF DAY---")
-    intSkis = Get_Valid_Integer("Enter ski inventory amount: ")
-    intSnowboards = Get_Valid_Integer("Enter snowboard inventory amount: ")
-    return RentalShop(intSkis, intSnowboards)
+    intSkis = Get_Valid_Integer("Enter ski inventory amount: ", intRangeMin = 0)
+    intSnowboards = Get_Valid_Integer("Enter snowboard inventory amount: ", intRangeMin = 0)
+    
+    SnowShop.starting_ski_inventory = intSkis
+    SnowShop.starting_snowboard_inventory = intSnowboards
 
 
 
@@ -383,7 +451,7 @@ def Start_Of_Day():
 
 def Main_Menu():
     print("---MAIN MENU---")
-    intChoice = Get_Valid_Integer("1. NEW RENTAL\n2. RETURN RENTAL\n3. SHOW INVENTORY\n4. END OF DAY\nSelect an option (1-4): ", 4)
+    intChoice = Get_Valid_Integer("1. NEW RENTAL\n2. RETURN RENTAL\n3. SHOW INVENTORY\n4. END OF DAY\nSelect an option (1-4): ", intRangeMin = 1, intRangeMax = 4)
 
     if intChoice == 1:
         New_Rental_Menu()
@@ -403,11 +471,11 @@ def Main_Menu():
 
 def New_Rental_Menu():
     print("---NEW RENTAL MENU---")
-    intChoice = Get_Valid_Integer("1. NEW CUSTOMER\n2. RETURNING CUSTOMER\nSelect an option (1-2): ", 2)
+    strChoice = Get_Valid_String_Y_N("Are you a new customer? (Answer Y/N): ")
     
     objCustomer = None
 
-    if intChoice == 1:
+    if strChoice == "Y":
         objCustomer = New_Customer_Menu()
 
     Start_Rental_Menu(objCustomer)
@@ -440,7 +508,54 @@ def New_Customer_Menu():
 # ------------------------------
 
 def Start_Rental_Menu(objCustomer = None):
+    global SnowShop
+
     print("---START RENTAL---")
+    blnCancel = False
+
+    intSkis = 0
+    intSnowboards = 0
+    strRentalBasis = ""
+    strCoupon = ""
+
+    if type(objCustomer) != Customer:
+        objCustomer = None
+
+    if objCustomer == None:
+        print("Select your user profile.")
+        objCustomer = Get_Customer()
+        
+        if objCustomer == None:
+            blnCancel = True
+
+    if not blnCancel:
+        intSkis = Get_Valid_Integer("How many Skis would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_ski_inventory)
+        intSnowboards = Get_Valid_Integer("How many Snowboards would you like to rent? (Enter a whole number): ", intRangeMin = 0, intRangeMax = SnowShop.available_snowboard_inventory)
+
+        if intSkis == 0 and intSnowboards == 0:
+            print("No inventory is being rented -- rental canceled.")
+            blnCancel = True
+
+        if not blnCancel:
+            intRentalChoice = Get_Valid_Integer("Would you like to rent on an Hourly, Daily, or Weekly basis?\n1. HOURLY\n2. DAILY\n3. WEEKLY\n(Enter a number 1-3): ", 3, 1)
+
+            if intRentalChoice == 1:
+                strRentalBasis = "Hourly"
+            elif intRentalChoice == 2:
+                strRentalBasis = "Daily"
+            else:
+                strRentalBasis = "Weekly"
+
+            strCoupon = Get_Valid_String_Optional("Enter a discount code (optional, leave blank if none): ")
+
+            print("CONFIRM RENTAL:\nCustomer:", objCustomer.customer_name, "ID:", objCustomer.customer_id, "\nSkis:", intSkis, "\nSnowboards:", intSnowboards, "\nRental Basis:", strRentalBasis, "\nCoupon Code:", strCoupon)
+            strConfirm = Get_Valid_String_Y_N("Is this correct? (Enter Y\N): ")
+
+            if strConfirm == "Y":
+                pass # Create rental and add to list
+
+
+
 
 
 
@@ -479,6 +594,7 @@ def End_Of_Day():
 
 blnValidated = bool(False)
 Customers = []
+SnowShop = RentalShop(0, 0)
 
 def main():
     # ----- DAY START
@@ -487,7 +603,7 @@ def main():
     Snowbards = Snowboard()
 
     # Prompt start of day inventory
-    SnowShop = Start_Of_Day()
+    Start_Of_Day()
 
     # ----- MAIN MENU
     Main_Menu()
