@@ -156,6 +156,7 @@ from rental_equipment import RentalEquipment
 from rental_shop import RentalShop
 from ski import Ski
 from snowboard import Snowboard
+from datetime import datetime, timedelta
 
 
 
@@ -435,7 +436,7 @@ def Get_Customer():
 
 # ------------------------------
 # Function Name: Get Customer Rentals
-# Function Purpose: Returns a list of all rentals made by a customer
+# Function Purpose: Returns a list of all rentals made by a customer and prompts the user to select one
 # ------------------------------
 
 def Get_Customer_Rentals(objCustomer):
@@ -447,12 +448,54 @@ def Get_Customer_Rentals(objCustomer):
 
     lstRentals = []
 
-    for objRental in Rentals:
+    for objRental, i in Rentals:
         if objRental.customer == objCustomer:
             lstRentals.append(objRental)
 
-    return lstRentals
+    if len(lstRentals) == 0:
+        print("No rentals found!")
+        return None
+    else:
+        print("Customer rentals found. Select the rental.")
 
+        strList = ""
+        intItemNumber = 1
+
+        for objPotentialRental in lstRentals:
+            strList = strList + "{}. {} Skis, {} Snowboards, Rental Basis: {}, Coupon: {}\n".format(intItemNumber, objPotentialRental.ski_quantity, objPotentialRental.snowboard_quantity, objPotentialRental.rental_period, objPotentialRental.coupon_code)
+            intItemNumber += 1
+
+        intItemNumber = Get_Valid_Integer(strList + "(Enter 1-{}): ".format(len(lstRentals)), intRangeMin = 1, intRangeMax = len(lstRentals))
+        objRental = lstRentals[intItemNumber - 1]
+
+        print("Rental {} selected.".format(intItemNumber))
+        return objRental
+
+
+def Display_Quote(intSkis, intSnowboards, strRentalBasis, intRentalLength, objRental):
+    fltSubtotal = objRental.calculate_subtotal(intRentalLength)
+    fltTotal = objRental.calculate_subtotal(intRentalLength)
+
+    if objRental.ski_quantity > 0:
+        print("{} Skis on a {} basis: ${:.2f}".format(intSkis, strRentalBasis, Skis.calculate_best_price(strRentalBasis, intRentalLength) * intSkis))
+                    
+    if objRental.snowboard_quantity > 0:
+        print("{} Snowboards on a {} basis: ${:.2f}".format(intSnowboards, strRentalBasis, Snowboards.calculate_best_price(strRentalBasis, intRentalLength) * intSnowboards))
+                    
+    print("Subtotal: ${:.2f}".format(fltSubtotal))
+
+    fltTotal = objRental.apply_family_discount(fltTotal)
+
+    if fltTotal < fltSubtotal:
+        print("Family discount: -${:.2f}".format(fltSubtotal - fltTotal))
+        fltSubtotal = fltTotal
+                
+    fltTotal = objRental.apply_coupon_discount(fltTotal)
+                    
+    if fltTotal < fltSubtotal:
+        print("Coupon code: -${:.2f}".format(fltSubtotal - fltTotal))
+                    
+    print("Total: ${:.2f}".format(fltTotal))
 
 
 # APPLICATION FUNCTIONS
@@ -599,31 +642,9 @@ def Start_Rental_Menu(objCustomer = None):
             strConfirm = Get_Valid_String_Y_N("Is this correct? (Enter Y/N): ")
 
             if strConfirm == "Y":
-                fltSubtotal = objRental.calculate_subtotal(intRentalLength)
-                fltTotal = objRental.calculate_subtotal(intRentalLength)
-
                 print("COST ESTIMATE:")
                 
-                if intSkis > 0:
-                    print("{} Skis on a {} basis: ${:.2f}".format(intSkis, strRentalBasis, Skis.calculate_best_price(strRentalBasis, intRentalLength) * intSkis))
-                    
-                if intSnowboards > 0:
-                    print("{} Snowboards on a {} basis: ${:.2f}".format(intSnowboards, strRentalBasis, Snowboards.calculate_best_price(strRentalBasis, intRentalLength) * intSnowboards))
-                    
-                print("Subtotal: ${:.2f}".format(fltSubtotal))
-
-                fltTotal = objRental.apply_family_discount(fltTotal)
-
-                if fltTotal < fltSubtotal:
-                    print("Family discount: -${:.2f}".format(fltSubtotal - fltTotal))
-                    fltSubtotal = fltTotal
-                
-                fltTotal = objRental.apply_coupon_discount(fltTotal)
-                    
-                if fltTotal < fltSubtotal:
-                    print("Coupon code: -${:.2f}".format(fltSubtotal - fltTotal))
-                    
-                print("Final estimated total: ${:.2f}".format(fltTotal))
+                Display_Quote(intSkis, intSnowboards, strRentalBasis, intRentalLength, objRental)
                 
                 strConfirm = Get_Valid_String_Y_N("Confirm rental (Enter Y/N): ")
 
@@ -658,7 +679,42 @@ def Return_Rental_Menu():
         blnCancel = True
 
     if not blnCancel:
-        pass
+        objRental = Get_Customer_Rentals(objCustomer)
+
+        if objRental == None:
+            print("Returning to the main menu.\n")
+            blnCancel = True
+        else:
+            intRentalTime = Get_Valid_Integer("Enter the actual rental length: ", intRangeMin = 1)
+
+            print("CONFIRM RENTAL: \nCustomer Name: {} (ID: {}) \nSkis Rented: {} \nSnowboards Rented: {} \nRental Period: {} \nRental Time: {}".format(objCustomer.customer_name, objCustomer.customer_id, objRental.ski_quantity, objRental.snowboard_quantity, objRental.rental_period, intRentalTime))
+            strChoice = Get_Valid_String_Y_N("Is this correct? (Enter Y/N): ")
+
+            if strChoice == "N":
+                print("Canceling rental return. Returning to main menu.")
+                blnCancel = True
+
+            if not blnCancel:
+                print("CHECKOUT:")
+
+                Display_Quote(objRental.snowboard_quantity, objRental.snowboard_quantity, objRental.rental_period, intRentalTime, objRental)
+                
+                strConfirm = Get_Valid_String_Y_N("Confirm total due amount (Enter Y/N): ")
+
+                if strChoice == "N":
+                    print("Canceling checkout. Returning to main menu.")
+                    blnCancel = True
+
+                if not blnCancel:
+                    SnowShop.return_equipment(objRental.ski_quantity, objRental.snowboard_quantity)
+                    SnowShop.add_daily_revenue(objRental.calculate_final_bill(intRentalTime))
+
+                    print("Successfully returned {} skis and {} snowboards. Thank you for renting with Bobs Rentals!\n".format(objRental.ski_quantity, objRental.snowboard_quantity))
+
+                    Rentals.remove(objRental)
+
+    Main_Menu()
+
 
 
 
