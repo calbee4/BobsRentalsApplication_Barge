@@ -131,7 +131,7 @@ def Get_Valid_Integer(strMessage, intRangeMax = None, intRangeMin = None):
 
 # ------------------------------
 # Function Name: Get Valid Integer Optional
-# Function Purpose: Yields the program until the user enters a valid integer. A range max can be defined, which will be ignored if left empty or < 0. User can leave blank.
+# Function Purpose: Yields the program until the user enters a valid integer. An optional inclusive range can be set. User can leave blank.
 # ------------------------------
 def Get_Valid_Integer_Optional(strMessage, intRangeMax = None, intRangeMin = None):
     intInput = int(0)
@@ -364,7 +364,6 @@ def Display_Quote(intSkis, intSnowboards, strRentalBasis, intRentalLength, objRe
                     
     print("Total: ${:.2f}".format(fltTotal))
 
-
 # APPLICATION FUNCTIONS
 
 # ------------------------------
@@ -581,7 +580,6 @@ def Return_Rental_Menu():
                     Rentals.remove(objRental)
 
     Main_Menu()
-
 
 
 
