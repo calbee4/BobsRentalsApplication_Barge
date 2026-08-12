@@ -150,7 +150,9 @@
 # Imports
 # ------------------------------
 
+from ast import Return
 from customer import Customer
+import customer
 from rental import Rental
 from rental_equipment import RentalEquipment
 from rental_shop import RentalShop
@@ -241,6 +243,26 @@ def Get_Valid_Integer(strMessage, intRangeMax = 0):
 
 
 # ------------------------------
+# Function Name: Get Valid Integer Optional
+# Function Purpose: Yields the program until the user enters a valid integer. A range max can be defined, which will be ignored if left empty or < 0. User can leave blank.
+# ------------------------------
+def Get_Valid_Integer_Optional(strMessage, intRangeMax = 0):
+    intInput = int(0)
+    global blnValidated
+    while blnValidated is False:
+        intInput = input(strMessage)
+
+        if intInput == "":
+            blnValidated = True
+        else:
+            intInput = Validate_Integer(intInput, intRangeMax)
+    blnValidated = False
+    print()
+    return intInput
+
+
+
+# ------------------------------
 # Function Name: Get Valid String Y/N
 # Function Purpose: Yields the program until the user enters a valid string, either Y or N.
 # ------------------------------
@@ -270,14 +292,77 @@ def Get_Valid_String(strMessage):
     print()
     return strInput
 
+
+
+# ------------------------------
+# Function Name: Search Customer
+# Function Purpose: Searches for a customer based on Name and/or Customer ID
+# ------------------------------
+
+def Search_Customer(strName, intID = None):
+    if type(intID) != int:
+        intID = None
+
+    PotentialCustomers = []
+
+    for objCustomer in Customers:
+        if objCustomer.customer_id == intID:
+            return objCustomer
+        elif str.lower(objCustomer.customer_name) == str.lower(strName):
+            PotentialCustomers.append(objCustomer)
+
+    if len(PotentialCustomers) == 0:
+        return None
+    else:
+        return PotentialCustomers
+
+
+
+# ------------------------------
+# Function Name: Get Customer
+# Function Purpose: Prompts customer to provide information to get their account
+# ------------------------------
+
+def Get_Customer():
+    blnValidated = False
+    objCustomer = None
+
+    while blnValidated == False:
+        strName = Get_Valid_String("Enter your name: ")
+        intID = Get_Valid_Integer_Optional("Enter your customer ID (optional, leave blank to skip): ")
+
+        objCustomer = Search_Customer(strName, intID)
+
+        if objCustomer == None:
+            strOption = Get_Valid_String_Y_N("No customer was found. Try again? (Enter Y/N): ")
+
+            if strOption == "N":
+                blnValidated = True
+
+        elif type(objCustomer) == Customer:
+            print("Customer found:", objCustomer.customer_name, objCustomer.customer_id)
+        elif type(objCustomer) == list:
+            print("Multiple customers with name found.")
+
+            strList = ""
+            intItemNumber = 1
+
+            for objPotentialCustomer in objCustomer:
+                strList = strList & intItemNumber & ".: " & objPotentialCustomer.customer_name & " " & objPotentialCustomer.customer_id & "\n"
+                intItemNumber += 1
+            
+
+
+
 # APPLICATION FUNCTIONS
 
 # ------------------------------
-# Function Name: Prompt Inventory
+# Function Name: Start Of Day
 # Function Purpose: Prompt user to set the starting inventory numbers, returns the instantiated RentalShop
 # ------------------------------
 
-def Prompt_Inventory():
+def Start_Of_Day():
+    print("---START OF DAY---")
     intSkis = Get_Valid_Integer("Enter ski inventory amount: ")
     intSnowboards = Get_Valid_Integer("Enter snowboard inventory amount: ")
     return RentalShop(intSkis, intSnowboards)
@@ -285,10 +370,108 @@ def Prompt_Inventory():
 
 
 # ------------------------------
+# Function Name: Main Menu
+# Function Purpose: Prompt user to select a submenu
+# ------------------------------
+
+def Main_Menu():
+    print("---MAIN MENU---")
+    intChoice = Get_Valid_Integer("1. NEW RENTAL\n2. RETURN RENTAL\n3. SHOW INVENTORY\n4. END OF DAY\nSelect an option (1-4): ", 4)
+
+    if intChoice == 1:
+        New_Rental_Menu()
+    elif intChoice == 2:
+        Return_Rental_Menu()
+    elif intChoice == 3:
+        Show_Inventory() 
+    else: 
+        End_Of_Day()
+
+
+
+# ------------------------------
+# Function Name: New Rental Menu
+# Function Purpose: Collect rental info to generate a new rental
+# ------------------------------
+
+def New_Rental_Menu():
+    print("---NEW RENTAL MENU---")
+    intChoice = Get_Valid_Integer("1. NEW CUSTOMER\n2. RETURNING CUSTOMER\nSelect an option (1-2): ", 2)
+    
+    objCustomer = None
+
+    if intChoice == 1:
+        objCustomer = New_Customer_Menu()
+
+    Start_Rental_Menu(objCustomer)
+
+
+
+# ------------------------------
+# Function Name: New Customer Menu
+# Function Purpose: Prompt customer to provide their name and create a new profile
+# ------------------------------
+
+def New_Customer_Menu():
+    global Customers
+    
+    print("---NEW CUSTOMER MENU---")
+    strName = Get_Valid_String("Enter your name: ")
+    intID = len(Customers) + 1
+    print(strName & ", your CustomerID is", intID)
+
+    objCustomer = Customer(intID, strName)
+    Customers.append(objCustomer)
+
+    return objCustomer
+
+
+
+# ------------------------------
+# Function Name: Start Rental Menu
+# Function Purpose: Prompt customer to provide information to generate a new rental
+# ------------------------------
+
+def Start_Rental_Menu(objCustomer = None):
+    print("---START RENTAL---")
+
+
+
+# ------------------------------
+# Function Name: Return Rental Menu
+# Function Purpose: Prompt customer to provide rental information to process a return
+# ------------------------------
+
+def Return_Rental_Menu():
+    pass
+
+
+
+# ------------------------------
+# Function Name: Show Inventory
+# Function Purpose: Display the current inventory levels
+# ------------------------------
+
+def Show_Inventory():
+    pass 
+
+
+
+# ------------------------------
+# Function Name: End Of Day
+# Function Purpose: Display daily totals and end program
+# ------------------------------
+
+def End_Of_Day():
+    pass
+
+
+# ------------------------------
 # Main Area
 # ------------------------------
 
 blnValidated = bool(False)
+Customers = []
 
 def main():
     # ----- DAY START
@@ -297,7 +480,9 @@ def main():
     Snowbards = Snowboard()
 
     # Prompt start of day inventory
-    print("---START OF DAY---")
-    SnowShop = Prompt_Inventory()
+    SnowShop = Start_Of_Day()
+
+    # ----- MAIN MENU
+    Main_Menu()
 
 main()
