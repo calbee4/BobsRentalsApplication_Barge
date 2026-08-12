@@ -3,6 +3,8 @@ Bob's Rental python application for CPDM 120.
 
 BobsRentalApplication is a Python application created to simulate the experience of running a rental shop for skis and snowboards. It allows new customers to create user profiles, process new rentals, quote their estimated bill and final amount due, and automatically handles inventory updates.
 
+The main application can be found in main_application.py. The provided classes are customer.py, rental.py, rental_equipment.py, rental_shop.py, ski.py, and snowboard.py.
+
 ---
 
 # Application Structure:
